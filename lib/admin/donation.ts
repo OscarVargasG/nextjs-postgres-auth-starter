@@ -6,10 +6,10 @@ import { prisma } from "@/lib/prisma";
  * Update the global donation goal.
  */
 export async function updateDonationStats(goal: number) {
-  return prisma.donationStats.upsert({
-    where: { id: "1" }, // Adjust the ID as needed for your database
+  return prisma.donationGoals.upsert({
+    where: { id: "global-donation-stats" }, // ID fijo del registro global
     update: { goal },
-    create: { id: "1", goal },
+    create: { id: "global-donation-stats", goal },
   });
 }
 
@@ -18,14 +18,13 @@ export async function updateDonationStats(goal: number) {
  */
 export async function createUserDonation(userId: string, amount: number) {
   // Record the user's donation
-  await prisma.userDonation.create({
+  return prisma.userDonation.create({
     data: {
       userId,
       amount,
+      donationStatsId: "global-donation-stats", // Relación fija con DonationGoals
     },
   });
-
-  // No need to update "current" in `DonationStats`, as it is calculated dynamically
 }
 
 /**
@@ -66,7 +65,7 @@ export async function calculateCurrentDonations() {
     },
   });
 
-  return total._sum.amount || 0; // Return 0 if no donations are registered
+  return total._sum.amount || 0; // Retorna 0 si no hay donaciones registradas
 }
 
 /**
@@ -74,8 +73,8 @@ export async function calculateCurrentDonations() {
  */
 export async function getDonationsStats() {
   // Fetch the global donation goal
-  const donationStats = await prisma.donationStats.findUnique({
-    where: { id: "1" }, // Adjust the ID as needed for your database
+  const donationStats = await prisma.donationGoals.findUnique({
+    where: { id: "global-donation-stats" }, // ID fijo
   });
 
   // Calculate the current total donations dynamically
@@ -86,7 +85,7 @@ export async function getDonationsStats() {
   });
 
   return {
-    goal: donationStats?.goal || 0, // Default to 0 if no goal is set
-    current: currentTotal._sum.amount || 0, // Default to 0 if no donations are registered
+    goal: donationStats?.goal || 0, // Default to 0 si no hay meta establecida
+    current: currentTotal._sum.amount || 0, // Default a 0 si no hay donaciones registradas
   };
 }

@@ -66,11 +66,10 @@ export default function AdminDashboardPage() {
           onClick={() => setShowQuizSection(!showQuizSection)}
           className="bg-gray-500 text-white px-4 py-2 rounded w-full text-left"
         >
-          {showQuizSection ? "▼" : "►"} Crear Quiz
+          {showQuizSection ? "▼" : "►"} Gestión de Quizes
         </button>
         {showQuizSection && (
           <div className="mt-4">
-            <h2 className="text-xl font-semibold mb-2">Crear Quiz</h2>
             <QuizzesTable />
           </div>
         )}
@@ -82,13 +81,10 @@ export default function AdminDashboardPage() {
           onClick={() => setShowDonationsSection(!showDonationsSection)}
           className="bg-gray-500 text-white px-4 py-2 rounded w-full text-left"
         >
-          {showDonationsSection ? "▼" : "►"} Actualizar Donaciones
+          {showDonationsSection ? "▼" : "►"} Gestión de Donaciones
         </button>
         {showDonationsSection && (
           <div className="mt-4">
-            <h2 className="text-xl font-semibold mb-2">
-              Actualizar Donaciones
-            </h2>
             <DonationsTable />
           </div>
         )}

@@ -26,24 +26,25 @@ CREATE TABLE "UserQuiz" (
     "quizId" TEXT NOT NULL,
     "score" INTEGER NOT NULL DEFAULT 0,
     "completed" BOOLEAN NOT NULL DEFAULT false,
+    "link" TEXT,
 
     CONSTRAINT "UserQuiz_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "DonationStats" (
-    "id" TEXT NOT NULL,
-    "current" DOUBLE PRECISION NOT NULL DEFAULT 0,
+CREATE TABLE "DonationGoals" (
+    "id" TEXT NOT NULL DEFAULT 'global-donation-stats',
     "goal" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "DonationStats_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "DonationGoals_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "UserDonation" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "donationStatsId" TEXT NOT NULL DEFAULT 'global-donation-stats',
     "amount" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -61,3 +62,6 @@ ALTER TABLE "UserQuiz" ADD CONSTRAINT "UserQuiz_quizId_fkey" FOREIGN KEY ("quizI
 
 -- AddForeignKey
 ALTER TABLE "UserDonation" ADD CONSTRAINT "UserDonation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserDonation" ADD CONSTRAINT "UserDonation_donationStatsId_fkey" FOREIGN KEY ("donationStatsId") REFERENCES "DonationGoals"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

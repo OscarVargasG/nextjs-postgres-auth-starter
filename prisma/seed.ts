@@ -1,11 +1,11 @@
+import { hashPassword } from "../lib/util";
 import { PrismaClient } from "@prisma/client";
-import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   // Hash the password for the admin user
-  const password = await hash("password123", 12);
+  const password = await hashPassword("password123");
 
   // Upsert the admin user
   const admin = await prisma.user.upsert({
@@ -44,21 +44,21 @@ async function main() {
       {
         email: "user1@example.com",
         name: "User 1",
-        password: await hash("password123", 12),
+        password: await hashPassword("password123"),
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
       },
       {
         email: "user2@example.com",
         name: "User 2",
-        password: await hash("password123", 12),
+        password: await hashPassword("password123"),
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Destiny&flip=true",
       },
       {
         email: "user3@example.com",
         name: "User 3",
-        password: await hash("password123", 12),
+        password: await hashPassword("password123"),
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
       },
@@ -111,6 +111,45 @@ async function main() {
   });
 
   console.log("UserQuiz relationships created:", userQuizzes);
+
+  // Create a single global donation goal
+  const donationStats = await prisma.donationGoals.upsert({
+    where: { id: "global-donation-stats" },
+    update: {},
+    create: {
+      id: "global-donation-stats",
+      goal: 5000, // Set an initial donation goal
+    },
+  });
+
+  console.log("Global donation goal created:", donationStats);
+
+  // Create user donations
+  const donations = await prisma.userDonation.createMany({
+    data: [
+      {
+        userId: admin.id,
+        amount: 100,
+        donationStatsId: "global-donation-stats",
+      },
+      {
+        userId: (await prisma.user.findUnique({
+          where: { email: "user1@example.com" },
+        }))!.id,
+        amount: 50,
+        donationStatsId: "global-donation-stats",
+      },
+      {
+        userId: (await prisma.user.findUnique({
+          where: { email: "user2@example.com" },
+        }))!.id,
+        amount: 75,
+        donationStatsId: "global-donation-stats",
+      },
+    ],
+  });
+
+  console.log("User donations created:", donations);
 }
 
 main()

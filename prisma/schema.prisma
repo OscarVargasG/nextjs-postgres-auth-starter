@@ -36,7 +36,7 @@ model UserQuiz {
   quiz      Quiz    @relation(fields: [quizId], references: [id])
 }
 
-model DonationStats {
+model DonationGoals {
   id       String          @id @default("global-donation-stats") // ID único para el POC
   goal     Float           @default(0) // Meta global de donaciones
   updatedAt DateTime       @updatedAt // Última actualización
@@ -48,7 +48,7 @@ model UserDonation {
   userId         String          // ID del usuario que hizo la donación
   donationStatsId String         @default("global-donation-stats") // Relación con DonationStats
   user           User            @relation(fields: [userId], references: [id])
-  donationStats  DonationStats   @relation(fields: [donationStatsId], references: [id])
+  donationStats  DonationGoals   @relation(fields: [donationStatsId], references: [id])
   amount         Float           // Monto donado por este usuario
   createdAt      DateTime        @default(now()) // Fecha de la donación
 }
