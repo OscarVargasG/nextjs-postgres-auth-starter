@@ -2,7 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["api.dicebear.com"], // Agrega aquí el dominio
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+        pathname: "/**", // Permite cualquier ruta en este dominio
+      },
+    ],
     dangerouslyAllowSVG: true, // Permite el uso de SVGs
   },
 };
