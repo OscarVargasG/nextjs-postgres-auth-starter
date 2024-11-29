@@ -5,7 +5,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Hash the password for the admin user
-  const password = await hashPassword("password123");
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return;
+
+  const hashedPassword = await hashPassword(adminPassword);
 
   // Upsert the admin user
   const admin = await prisma.user.upsert({
@@ -14,7 +17,7 @@ async function main() {
     create: {
       email: "admin@admin.com",
       name: "Admin",
-      password,
+      password: hashedPassword,
       image: "https://api.dicebear.com/9.x/adventurer/svg?seed=Sara&flip=true", // Optional avatar image
     },
   });
@@ -59,21 +62,21 @@ async function main() {
       {
         email: "user1@example.com",
         name: "User 1",
-        password: await hashPassword("password123"),
+        password: hashedPassword,
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
       },
       {
         email: "user2@example.com",
         name: "User 2",
-        password: await hashPassword("password123"),
+        password: hashedPassword,
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Destiny&flip=true",
       },
       {
         email: "user3@example.com",
         name: "User 3",
-        password: await hashPassword("password123"),
+        password: hashedPassword,
         image:
           "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
       },
