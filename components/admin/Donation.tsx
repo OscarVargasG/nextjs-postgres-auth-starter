@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import {
-  updateDonationStats,
   createUserDonation,
   getDonations,
   calculateCurrentDonations,
+  getDonationGoal,
+  updateDonationGoalFirst,
 } from "@/lib/admin/donation";
 import { getUsers } from "@/lib/admin/user";
 import { User } from "@/types/common";
@@ -28,8 +29,8 @@ export default function DonationsTable() {
         if (usersResponse) setUsers(usersResponse);
 
         // Fetch global donation goal
-        const statsResponse = await updateDonationStats(goal); // Fetch the global goal
-        if (statsResponse) setGoal(statsResponse.goal);
+        const goal = await getDonationGoal(); // Fetch the global goal
+        setGoal(goal);
 
         // Fetch current donations
         const totalCurrent = await calculateCurrentDonations();
@@ -51,7 +52,7 @@ export default function DonationsTable() {
   // Update the global donation goal
   const handleUpdateGoal = async () => {
     try {
-      const updatedStats = await updateDonationStats(goal);
+      const updatedStats = await updateDonationGoalFirst(goal);
       setGoal(updatedStats.goal);
       alert("Global donation goal updated successfully.");
     } catch (err) {

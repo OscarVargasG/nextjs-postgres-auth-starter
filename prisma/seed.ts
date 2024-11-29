@@ -1,5 +1,5 @@
 import { hashPassword } from "../lib/util";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -21,22 +21,37 @@ async function main() {
 
   console.log("Admin user created:", admin);
 
-  // Create sample quizzes
-  const quiz1 = await prisma.quiz.create({
-    data: {
-      title: "General Knowledge Quiz",
-      description: "Test your general knowledge with this quiz!",
+  // Create quizzes
+  const quizzes = [
+    {
+      title: "Generación X",
+      description: "Explora los desafíos de los nacidos entre 1965 y 1980.",
+      link: "https://quizizz.com/join?gc=39361984",
     },
-  });
-
-  const quiz2 = await prisma.quiz.create({
-    data: {
-      title: "Math Quiz",
-      description: "A challenging quiz to test your math skills.",
+    {
+      title: "Millennials",
+      description:
+        "Descubre cómo los nacidos entre 1981 y 1996 enfrentan retos únicos.",
+      link: "https://quizizz.com/join?gc=17079744",
     },
-  });
+    {
+      title: "Gen Z",
+      description: "Conoce los desafíos de los nacidos entre 1997 y 2012.",
+      link: "https://quizizz.com/join?gc=63217088",
+    },
+  ];
 
-  console.log("Quizzes created:", { quiz1, quiz2 });
+  const createdQuizzes: Prisma.QuizCreateInput[] = [];
+  for (const quiz of quizzes) {
+    const createdQuiz = await prisma.quiz.create({
+      data: {
+        title: quiz.title,
+        description: quiz.description,
+      },
+    });
+    createdQuizzes.push(createdQuiz);
+    console.log(`Quiz created: ${quiz.title}`);
+  }
 
   // Create additional users
   const users = await prisma.user.createMany({
@@ -69,87 +84,37 @@ async function main() {
   console.log("Additional users created");
 
   // Create UserQuiz relationships with scores
-  const userQuizzes = await prisma.userQuiz.createMany({
-    data: [
-      {
-        userId: admin.id,
-        quizId: quiz1.id,
-        score: 85,
-        completed: true,
-      },
-      {
-        userId: admin.id,
-        quizId: quiz2.id,
-        score: 90,
-        completed: true,
-      },
-      {
-        userId: (await prisma.user.findUnique({
-          where: { email: "user1@example.com" },
-        }))!.id,
-        quizId: quiz1.id,
-        score: 70,
-        completed: true,
-      },
-      {
-        userId: (await prisma.user.findUnique({
-          where: { email: "user2@example.com" },
-        }))!.id,
-        quizId: quiz2.id,
-        score: 80,
-        completed: true,
-      },
-      {
-        userId: (await prisma.user.findUnique({
-          where: { email: "user3@example.com" },
-        }))!.id,
-        quizId: quiz1.id,
-        score: 95,
-        completed: true,
-      },
-    ],
+  const allUsers = await prisma.user.findMany(); // Fetch all users
+  const userQuizzes: Prisma.UserQuizCreateManyInput[] = [];
+
+  allUsers.forEach((user) => {
+    createdQuizzes.forEach((quiz) => {
+      if (quiz.id) {
+        userQuizzes.push({
+          userId: user.id,
+          quizId: quiz.id, // Ahora se garantiza que no sea undefined
+          score: Math.floor(Math.random() * 100), // Genera una puntuación aleatoria entre 0 y 100
+          completed: Math.random() > 0.5, // Marca el quiz como completado de forma aleatoria
+        });
+      }
+    });
   });
 
-  console.log("UserQuiz relationships created:", userQuizzes);
+  // Insert UserQuiz relationships
+  await prisma.userQuiz.createMany({ data: userQuizzes });
+  console.log("UserQuiz relationships created for all users and quizzes");
 
-  // Create a single global donation goal
-  const donationStats = await prisma.donationGoals.upsert({
-    where: { id: "global-donation-stats" },
+  // Create global donation goal
+  const globalDonationGoal = await prisma.donationGoals.upsert({
+    where: { id: "global-donation-goal" },
     update: {},
     create: {
-      id: "global-donation-stats",
-      goal: 5000, // Set an initial donation goal
+      id: "global-donation-goal",
+      goal: 10000, // Set an initial donation goal
     },
   });
 
-  console.log("Global donation goal created:", donationStats);
-
-  // Create user donations
-  const donations = await prisma.userDonation.createMany({
-    data: [
-      {
-        userId: admin.id,
-        amount: 100,
-        donationStatsId: "global-donation-stats",
-      },
-      {
-        userId: (await prisma.user.findUnique({
-          where: { email: "user1@example.com" },
-        }))!.id,
-        amount: 50,
-        donationStatsId: "global-donation-stats",
-      },
-      {
-        userId: (await prisma.user.findUnique({
-          where: { email: "user2@example.com" },
-        }))!.id,
-        amount: 75,
-        donationStatsId: "global-donation-stats",
-      },
-    ],
-  });
-
-  console.log("User donations created:", donations);
+  console.log("Global donation goal created:", globalDonationGoal);
 }
 
 main()

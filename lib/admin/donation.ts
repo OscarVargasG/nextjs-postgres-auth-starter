@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 /**
  * Update the global donation goal.
  */
-export async function updateDonationStats(goal: number) {
+export async function updateDonationGoal(goal: number) {
   return prisma.donationGoals.upsert({
     where: { id: "global-donation-stats" }, // ID fijo del registro global
     update: { goal },
@@ -22,7 +22,6 @@ export async function createUserDonation(userId: string, amount: number) {
     data: {
       userId,
       amount,
-      donationStatsId: "global-donation-stats", // Relación fija con DonationGoals
     },
   });
 }
@@ -69,13 +68,19 @@ export async function calculateCurrentDonations() {
 }
 
 /**
- * Get global donation stats (goal and current total donations).
+ * Get the current donation goal.
+ */
+export async function getDonationGoal() {
+  const donationGoal = await prisma.donationGoals.findFirst(); // Obtiene el primer registro disponible
+
+  return donationGoal?.goal || 0; // Retorna 0 si no hay meta establecida
+}
+
+/**
+ * Get donation stats (goal and current total donations).
  */
 export async function getDonationsStats() {
-  // Fetch the global donation goal
-  const donationStats = await prisma.donationGoals.findUnique({
-    where: { id: "global-donation-stats" }, // ID fijo
-  });
+  const goal = await getDonationGoal(); // Usa la función de getDonationGoal
 
   // Calculate the current total donations dynamically
   const currentTotal = await prisma.userDonation.aggregate({
@@ -85,7 +90,30 @@ export async function getDonationsStats() {
   });
 
   return {
-    goal: donationStats?.goal || 0, // Default to 0 si no hay meta establecida
+    goal,
     current: currentTotal._sum.amount || 0, // Default a 0 si no hay donaciones registradas
   };
+}
+
+/**
+ * Update the first donation goal.
+ */
+export async function updateDonationGoalFirst(goal: number) {
+  // Find the first donation goal
+  const donationGoal = await prisma.donationGoals.findFirst();
+
+  if (!donationGoal) {
+    // If no goal exists, create a new one
+    return prisma.donationGoals.create({
+      data: {
+        goal,
+      },
+    });
+  }
+
+  // If a goal exists, update it
+  return prisma.donationGoals.update({
+    where: { id: donationGoal.id },
+    data: { goal },
+  });
 }
