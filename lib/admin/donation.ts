@@ -7,9 +7,9 @@ import { prisma } from "@/lib/prisma";
  */
 export async function updateDonationGoal(goal: number) {
   return prisma.donationGoals.upsert({
-    where: { id: "global-donation-stats" }, // ID fijo del registro global
+    where: { id: "global-donation-goal" }, // ID fijo del registro global
     update: { goal },
-    create: { id: "global-donation-stats", goal },
+    create: { id: "global-donation-goal", goal },
   });
 }
 

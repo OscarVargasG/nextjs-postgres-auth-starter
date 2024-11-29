@@ -14,6 +14,7 @@ CREATE TABLE "Quiz" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
@@ -26,7 +27,6 @@ CREATE TABLE "UserQuiz" (
     "quizId" TEXT NOT NULL,
     "score" INTEGER NOT NULL DEFAULT 0,
     "completed" BOOLEAN NOT NULL DEFAULT false,
-    "link" TEXT,
 
     CONSTRAINT "UserQuiz_pkey" PRIMARY KEY ("id")
 );
@@ -44,7 +44,7 @@ CREATE TABLE "DonationGoals" (
 CREATE TABLE "UserDonation" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "donationStatsId" TEXT NOT NULL DEFAULT 'global-donation-stats',
+    "donationStatsId" TEXT NOT NULL DEFAULT 'global-donation-goal',
     "amount" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -53,6 +53,9 @@ CREATE TABLE "UserDonation" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Quiz_title_key" ON "Quiz"("title");
 
 -- AddForeignKey
 ALTER TABLE "UserQuiz" ADD CONSTRAINT "UserQuiz_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

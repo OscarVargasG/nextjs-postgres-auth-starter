@@ -45,9 +45,9 @@ export default function AssignedQuizzes({ quizzes }: AssignedQuizzesProps) {
                     {quiz.description}
                   </td>
                   <td className="border border-gray-300 px-4 py-2">
-                    {quiz.link ? (
+                    {quiz.url ? (
                       <a
-                        href={quiz.link}
+                        href={quiz.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-indigo-500 underline"

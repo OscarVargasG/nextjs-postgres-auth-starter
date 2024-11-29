@@ -4,7 +4,6 @@ import {
   getQuizzes,
   getUsersByQuiz,
   updateQuiz,
-  updateUserQuizLink,
   updateUserScore,
 } from "@/lib/admin/quiz";
 import { useState, useEffect } from "react";
@@ -18,13 +17,14 @@ export default function QuizzesTable() {
   const [isEditingQuiz, setIsEditingQuiz] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [url, setUrl] = useState("");
   const [showUsers, setShowUsers] = useState(false);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
         const response = await getQuizzes();
-        if (response) setQuizzes(response); // No type error here since the structure matches
+        if (response) setQuizzes(response);
       } catch (err) {
         console.error("Error fetching quizzes:", err);
       }
@@ -36,12 +36,16 @@ export default function QuizzesTable() {
   const handleSaveQuiz = async () => {
     try {
       if (selectedQuiz) {
-        await updateQuiz(selectedQuiz.id, { title, description });
+        await updateQuiz(selectedQuiz.id, { title, description, url });
         alert("Quiz updated successfully.");
         setIsEditingQuiz(false);
         setSelectedQuiz(null);
         setTitle("");
         setDescription("");
+        setUrl("");
+        // Actualizar la lista de quizzes
+        const response = await getQuizzes();
+        if (response) setQuizzes(response);
       }
     } catch (err) {
       console.error("Error updating quiz:", err);
@@ -50,34 +54,24 @@ export default function QuizzesTable() {
 
   const handleAssignScore = async (userId: string, score: number) => {
     try {
-      await updateUserScore(userId, selectedQuiz!.id, score);
-      alert("Score updated successfully.");
-      const updatedUsers = quizUsers.map((user) =>
-        user.id === userId ? { ...user, score } : user
-      );
-      setQuizUsers(updatedUsers);
+      if (selectedQuiz) {
+        await updateUserScore(userId, selectedQuiz.id, score);
+        alert("Score updated successfully.");
+        const updatedUsers = quizUsers.map((user) =>
+          user.userId === userId ? { ...user, score } : user
+        );
+        setQuizUsers(updatedUsers);
+      }
     } catch (err) {
       console.error("Error assigning score:", err);
     }
   };
 
-  const handleUpdateLink = async (userId: string, link: string) => {
-    try {
-      await updateUserQuizLink(userId, selectedQuiz!.id, link);
-      alert("Link updated successfully.");
-      const updatedUsers = quizUsers.map((user) =>
-        user.id === userId ? { ...user, link } : user
-      );
-      setQuizUsers(updatedUsers);
-    } catch (err) {
-      console.error("Error updating link:", err);
-    }
-  };
   const handleViewUsers = async (quiz: Quiz) => {
     try {
       const users = await getUsersByQuiz(quiz.id);
       setSelectedQuiz(quiz);
-      setQuizUsers(users); // No type error since users now match QuizUser[]
+      setQuizUsers(users);
       setShowUsers(true);
     } catch (err) {
       console.error("Error fetching users for quiz:", err);
@@ -86,12 +80,13 @@ export default function QuizzesTable() {
 
   return (
     <div>
-      {/* Quiz Table */}
+      {/* Tabla de Quizzes */}
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
             <th className="border border-gray-300 px-4 py-2">Title</th>
             <th className="border border-gray-300 px-4 py-2">Description</th>
+            <th className="border border-gray-300 px-4 py-2">URL</th>
             <th className="border border-gray-300 px-4 py-2">Actions</th>
           </tr>
         </thead>
@@ -103,11 +98,22 @@ export default function QuizzesTable() {
                 {quiz.description}
               </td>
               <td className="border border-gray-300 px-4 py-2">
+                <a
+                  href={quiz.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-500 underline"
+                >
+                  Open Quiz
+                </a>
+              </td>
+              <td className="border border-gray-300 px-4 py-2">
                 <button
                   onClick={() => {
                     setSelectedQuiz(quiz);
                     setTitle(quiz.title);
                     setDescription(quiz.description);
+                    setUrl(quiz.url);
                     setIsEditingQuiz(true);
                   }}
                   className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
@@ -126,7 +132,7 @@ export default function QuizzesTable() {
         </tbody>
       </table>
 
-      {/* Edit Quiz */}
+      {/* Editar Quiz */}
       {isEditingQuiz && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold">Edit Quiz</h3>
@@ -143,6 +149,13 @@ export default function QuizzesTable() {
             onChange={(e) => setDescription(e.target.value)}
             className="border rounded p-2 w-full mb-2"
           />
+          <input
+            type="text"
+            placeholder="URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="border rounded p-2 w-full mb-2"
+          />
           <button
             onClick={handleSaveQuiz}
             className="bg-green-500 text-white px-4 py-2 rounded"
@@ -152,7 +165,7 @@ export default function QuizzesTable() {
         </div>
       )}
 
-      {/* Assigned Users Table */}
+      {/* Tabla de Usuarios Asignados */}
       {showUsers && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold">Assigned Users</h3>
@@ -161,8 +174,6 @@ export default function QuizzesTable() {
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 px-4 py-2">Name</th>
                 <th className="border border-gray-300 px-4 py-2">Score</th>
-                <th className="border border-gray-300 px-4 py-2">Link</th>
-                <th className="border border-gray-300 px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -179,16 +190,6 @@ export default function QuizzesTable() {
                         handleAssignScore(user.userId, parseInt(e.target.value))
                       }
                       className="border rounded p-1 w-16"
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <input
-                      type="text"
-                      value={user.link || ""}
-                      onChange={(e) =>
-                        handleUpdateLink(user.userId, e.target.value)
-                      }
-                      className="border rounded p-2 w-full"
                     />
                   </td>
                 </tr>

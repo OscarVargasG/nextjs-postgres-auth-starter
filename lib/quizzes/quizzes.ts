@@ -28,8 +28,8 @@ export async function getUsersWithQuizzes() {
 }
 
 /**
- * Fetch all quizzes along with their assigned users and details.
- * @returns List of quizzes with user details.
+ * Fetch all quizzes along with their details.
+ * @returns List of quizzes with details.
  */
 export async function getQuizzes() {
   const quizzes = await prisma.quiz.findMany({
@@ -52,6 +52,7 @@ export async function getQuizzes() {
     id: quiz.id,
     title: quiz.title,
     description: quiz.description,
+    url: quiz.url,
     createdAt: quiz.createdAt,
     userQuizzes: quiz.userQuizzes.map((userQuiz) => ({
       id: userQuiz.id,
@@ -61,7 +62,6 @@ export async function getQuizzes() {
         email: userQuiz.user.email,
       },
       score: userQuiz.score,
-      link: userQuiz.link || null,
     })),
   }));
 }

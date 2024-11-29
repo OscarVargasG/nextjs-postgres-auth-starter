@@ -6,7 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
   // Hash the password for the admin user
   const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return;
+  if (!adminPassword) {
+    throw new Error("ADMIN_PASSWORD is not set in the environment variables.");
+  }
 
   const hashedPassword = await hashPassword(adminPassword);
 
@@ -24,88 +26,109 @@ async function main() {
 
   console.log("Admin user created:", admin);
 
-  // Create quizzes
-  const quizzes = [
+  // Create quizzes and collect their IDs
+  const quizzesData = [
     {
       title: "Generación X",
       description: "Explora los desafíos de los nacidos entre 1965 y 1980.",
-      link: "https://quizizz.com/join?gc=39361984",
+      url: "https://quizizz.com/join?gc=39361984",
     },
     {
       title: "Millennials",
       description:
         "Descubre cómo los nacidos entre 1981 y 1996 enfrentan retos únicos.",
-      link: "https://quizizz.com/join?gc=17079744",
+      url: "https://quizizz.com/join?gc=17079744",
     },
     {
       title: "Gen Z",
       description: "Conoce los desafíos de los nacidos entre 1997 y 2012.",
-      link: "https://quizizz.com/join?gc=63217088",
+      url: "https://quizizz.com/join?gc=63217088",
     },
   ];
 
-  const createdQuizzes: Prisma.QuizCreateInput[] = [];
-  for (const quiz of quizzes) {
-    const createdQuiz = await prisma.quiz.create({
-      data: {
-        title: quiz.title,
-        description: quiz.description,
-      },
+  const createdQuizzes = [];
+  for (const quizData of quizzesData) {
+    let quiz = await prisma.quiz.findFirst({
+      where: { title: quizData.title },
     });
-    createdQuizzes.push(createdQuiz);
-    console.log(`Quiz created: ${quiz.title}`);
+
+    if (!quiz) {
+      quiz = await prisma.quiz.create({
+        data: quizData,
+      });
+    }
+
+    createdQuizzes.push(quiz);
   }
 
-  // Create additional users
-  const users = await prisma.user.createMany({
-    data: [
-      {
-        email: "user1@example.com",
-        name: "User 1",
-        password: hashedPassword,
-        image:
-          "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
-      },
-      {
-        email: "user2@example.com",
-        name: "User 2",
-        password: hashedPassword,
-        image:
-          "https://api.dicebear.com/9.x/adventurer/svg?seed=Destiny&flip=true",
-      },
-      {
-        email: "user3@example.com",
-        name: "User 3",
-        password: hashedPassword,
-        image:
-          "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
-      },
-    ],
+  console.log("Quizzes created.");
+
+  // Create additional users and collect their IDs
+  const usersData = [
+    {
+      email: "user1@example.com",
+      name: "User 1",
+      password: hashedPassword,
+      image:
+        "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
+    },
+    {
+      email: "user2@example.com",
+      name: "User 2",
+      password: hashedPassword,
+      image:
+        "https://api.dicebear.com/9.x/adventurer/svg?seed=Destiny&flip=true",
+    },
+    {
+      email: "user3@example.com",
+      name: "User 3",
+      password: hashedPassword,
+      image:
+        "https://api.dicebear.com/9.x/adventurer/svg?seed=Jocelyn&flip=true",
+    },
+  ];
+
+  // Include the admin in the users list
+  usersData.push({
+    email: admin.email,
+    name: admin.name,
+    password: hashedPassword,
+    image: admin.image,
+  });
+
+  const createdUsers = [];
+  for (const userData of usersData) {
+    const user = await prisma.user.upsert({
+      where: { email: userData.email },
+      update: {},
+      create: userData,
+    });
+    createdUsers.push(user);
+  }
+
+  console.log("Users created.");
+
+  // Assign all quizzes to all users
+  const userQuizzesData: Prisma.UserQuizCreateManyInput[] = [];
+
+  for (const user of createdUsers) {
+    for (const quiz of createdQuizzes) {
+      userQuizzesData.push({
+        userId: user.id,
+        quizId: quiz.id,
+        score: Math.floor(Math.random() * 100), // Optional: generate random score
+        completed: Math.random() < 0.5, // Optional: random completion status
+      });
+    }
+  }
+
+  // Insert UserQuiz relationships
+  await prisma.userQuiz.createMany({
+    data: userQuizzesData,
     skipDuplicates: true,
   });
 
-  console.log("Additional users created");
-
-  // Create UserQuiz relationships with scores
-  const allUsers = await prisma.user.findMany(); // Fetch all users
-  const userQuizzes: Prisma.UserQuizCreateManyInput[] = [];
-
-  allUsers.forEach((user) => {
-    createdQuizzes.forEach((quiz) => {
-      if (quiz.id) {
-        userQuizzes.push({
-          userId: user.id,
-          quizId: quiz.id, // Ahora se garantiza que no sea undefined
-          score: Math.floor(Math.random() * 100), // Genera una puntuación aleatoria entre 0 y 100
-          completed: Math.random() > 0.5, // Marca el quiz como completado de forma aleatoria
-        });
-      }
-    });
-  });
-
-  // Insert UserQuiz relationships
-  await prisma.userQuiz.createMany({ data: userQuizzes });
-  console.log("UserQuiz relationships created for all users and quizzes");
+  console.log("All quizzes assigned to all users.");
 
   // Create global donation goal
   const globalDonationGoal = await prisma.donationGoals.upsert({

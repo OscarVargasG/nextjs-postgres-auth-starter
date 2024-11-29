@@ -3,28 +3,20 @@
 import { prisma } from "@/lib/prisma";
 
 /**
- * Crear un nuevo quiz y asignarlo a todos los usuarios existentes.
+ * Crear un nuevo quiz con URL.
  */
-export async function createQuiz(title: string, description: string) {
-  const quiz = await prisma.quiz.create({
-    data: { title, description },
+export async function createQuiz(
+  title: string,
+  description: string,
+  url: string
+) {
+  return prisma.quiz.create({
+    data: { title, description, url },
   });
-
-  const users = await prisma.user.findMany();
-
-  // Asignar el quiz creado a todos los usuarios existentes
-  await prisma.userQuiz.createMany({
-    data: users.map((user) => ({
-      userId: user.id,
-      quizId: quiz.id,
-    })),
-  });
-
-  return quiz;
 }
 
 /**
- * Obtener todos los quizzes.
+ * Obtener todos los quizzes con usuarios asignados.
  */
 export async function getQuizzes() {
   return prisma.quiz.findMany({
@@ -34,7 +26,6 @@ export async function getQuizzes() {
           id: true,
           userId: true,
           score: true,
-          link: true, // This is already included and matches the updated type
           user: { select: { name: true, email: true } },
         },
       },
@@ -43,11 +34,11 @@ export async function getQuizzes() {
 }
 
 /**
- * Actualizar un quiz (título y descripción).
+ * Actualizar un quiz (título, descripción y URL).
  */
 export async function updateQuiz(
   quizId: string,
-  updates: Partial<{ title: string; description: string }>
+  updates: Partial<{ title: string; description: string; url: string }>
 ) {
   return prisma.quiz.update({
     where: { id: quizId },
@@ -72,16 +63,14 @@ export async function getUsersByQuiz(quizId: string) {
     },
   });
 
-  // Map the response to match the QuizUser type
   return userQuizzes.map((userQuiz) => ({
     id: userQuiz.id,
-    userId: userQuiz.userId, // Add userId explicitly
+    userId: userQuiz.userId,
     user: {
       name: userQuiz.user.name,
       email: userQuiz.user.email,
     },
     score: userQuiz.score,
-    link: userQuiz.link || null,
   }));
 }
 
@@ -96,20 +85,6 @@ export async function updateUserScore(
   return prisma.userQuiz.updateMany({
     where: { userId, quizId },
     data: { score },
-  });
-}
-
-/**
- * Actualizar el enlace de un `UserQuiz`.
- */
-export async function updateUserQuizLink(
-  userId: string,
-  quizId: string,
-  link: string
-) {
-  return prisma.userQuiz.updateMany({
-    where: { userId, quizId },
-    data: { link },
   });
 }
 
@@ -136,6 +111,7 @@ export async function getQuizzesByEmail(email: string) {
           id: true,
           title: true,
           description: true,
+          url: true,
           createdAt: true,
         },
       },
@@ -146,8 +122,8 @@ export async function getQuizzesByEmail(email: string) {
     id: userQuiz.quiz.id,
     title: userQuiz.quiz.title,
     description: userQuiz.quiz.description,
+    url: userQuiz.quiz.url,
     createdAt: userQuiz.quiz.createdAt,
     score: userQuiz.score,
-    link: userQuiz.link || null,
   }));
 }

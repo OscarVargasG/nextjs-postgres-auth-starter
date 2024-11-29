@@ -19,8 +19,9 @@ model User {
 
 model Quiz {
   id          String     @id @default(uuid())
-  title       String
+  title       String     @unique
   description String
+  url         String      // URL del quiz
   createdAt   DateTime   @default(now())
   userQuizzes UserQuiz[]
 }
@@ -31,24 +32,24 @@ model UserQuiz {
   quizId    String
   score     Int     @default(0)
   completed Boolean @default(false)
-  link      String? // Link para asignación del quiz
   user      User    @relation(fields: [userId], references: [id])
   quiz      Quiz    @relation(fields: [quizId], references: [id])
 }
 
 model DonationGoals {
-  id       String          @id @default("global-donation-stats") // ID único para el POC
-  goal     Float           @default(0) // Meta global de donaciones
-  updatedAt DateTime       @updatedAt // Última actualización
-  donations UserDonation[] // Relación con donaciones de usuarios
+  id        String          @id @default("global-donation-stats") // ID único para el POC
+  goal      Float           @default(0) // Meta global de donaciones
+  updatedAt DateTime        @updatedAt // Última actualización
+  donations UserDonation[]  // Relación con donaciones de usuarios
 }
 
 model UserDonation {
-  id             String          @id @default(uuid())
-  userId         String          // ID del usuario que hizo la donación
-  donationStatsId String         @default("global-donation-stats") // Relación con DonationStats
-  user           User            @relation(fields: [userId], references: [id])
-  donationStats  DonationGoals   @relation(fields: [donationStatsId], references: [id])
-  amount         Float           // Monto donado por este usuario
-  createdAt      DateTime        @default(now()) // Fecha de la donación
+  id              String          @id @default(uuid())
+  userId          String          // ID del usuario que hizo la donación
+  donationStatsId String          @default("global-donation-goal") // Updated default value
+  user            User            @relation(fields: [userId], references: [id])
+  donationStats   DonationGoals   @relation(fields: [donationStatsId], references: [id])
+  amount          Float           // Monto donado por este usuario
+  createdAt       DateTime        @default(now()) // Fecha de la donación
 }
+

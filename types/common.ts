@@ -8,7 +8,7 @@ export interface UserWithQuiz {
   id: string;
   name: string;
   image: string | null;
-  quizzes: string[];
+  quizzes: string[]; // Lista de títulos de los quizzes asignados
 }
 
 export interface User {
@@ -32,13 +32,13 @@ export interface QuizUser {
     email: string;
   };
   score: number;
-  link?: string | null; // Allow null for the link property
 }
 
 export interface Quiz {
   id: string;
   title: string;
   description: string;
+  url: string; // URL del quiz (nueva propiedad)
   createdAt: Date;
   userQuizzes: QuizUser[];
 }
@@ -47,6 +47,6 @@ export interface AssignedQuiz {
   id: string;
   title: string;
   description: string;
+  url: string; // La URL reemplaza a `link`
   score: number;
-  link: string | null;
 }
