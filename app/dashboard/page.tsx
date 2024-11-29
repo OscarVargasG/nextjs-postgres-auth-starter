@@ -16,6 +16,7 @@ import { getQuizzesByEmail } from "@/lib/admin/quiz";
 import Link from "next/link";
 import LoadingSpinnerSection from "@/components/LoadingSpinnerSection";
 import AssignedQuizzes from "@/components/sections/assignedQuizzes";
+import { LogoutButton } from "@/components/buttons.component";
 
 const defaultUserSession: UserSession = { email: "", name: "", image: "" };
 
@@ -78,9 +79,15 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          ¡Bienvenido, {userSession.name}!
-        </h1>
+        {/* Row: Welcome and Logout Button */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            ¡Bienvenido, {userSession.name}!
+          </h1>
+          <LogoutButton />
+        </div>
+        {/* End Row */}
+
         {session?.user?.email === "admin@admin.com" && (
           <Link
             href="/dashboard/admin"

@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import UsersTable from "@/components/admin/UsersTable";
 import QuizzesTable from "@/components/admin/QuizzesTable";
 import DonationsTable from "@/components/admin/Donation";
@@ -19,12 +19,13 @@ export default function AdminDashboardPage() {
   const [showUsersSection, setShowUsersSection] = useState(true);
   const [showQuizSection, setShowQuizSection] = useState(false);
   const [showDonationsSection, setShowDonationsSection] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (session?.user?.email === "admin@admin.com") {
       setIsAdmin(true);
     } else if (session?.user) {
-      redirect("/"); // Redirige a la página principal si no es admin
+      redirect("/"); // Redirect to the main page if not admin
     }
   }, [session]);
 
@@ -34,7 +35,15 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen p-4 bg-gray-100">
-      <h1 className="text-2xl font-bold mb-4">Panel de Administración</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Panel de Administración</h1>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          ← Volver al Dashboard
+        </button>
+      </div>
 
       {/* Gestión de Usuarios */}
       <section className="mb-6">
@@ -62,7 +71,6 @@ export default function AdminDashboardPage() {
         {showQuizSection && (
           <div className="mt-4">
             <h2 className="text-xl font-semibold mb-2">Crear Quiz</h2>
-            {/* Aquí puedes agregar un formulario para crear quizzes */}
             <QuizzesTable />
           </div>
         )}
@@ -81,7 +89,6 @@ export default function AdminDashboardPage() {
             <h2 className="text-xl font-semibold mb-2">
               Actualizar Donaciones
             </h2>
-            {/* Aquí puedes agregar un formulario para actualizar donaciones */}
             <DonationsTable />
           </div>
         )}
