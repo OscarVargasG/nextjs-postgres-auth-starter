@@ -31,7 +31,7 @@ export default function WelcomeScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        ¡Bienvenido a este pequeño juego!
+        ¡Bienvenido a este desafio!
       </motion.h1>
       <motion.div
         className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
@@ -69,13 +69,18 @@ export default function WelcomeScreen() {
             Anterior
           </button>
           <button
-            onClick={() =>
-              setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))
-            }
+            onClick={() => {
+              if (currentStep === steps.length - 1) {
+                // Redirige al usuario a la página de inicio de sesión usando router.push
+                router.push("/login");
+              } else {
+                // Avanza al siguiente paso
+                setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1));
+              }
+            }}
             className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
-            disabled={currentStep === steps.length - 1}
           >
-            {currentStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
+            {currentStep === steps.length - 1 ? "Ingresar" : "Siguiente"}
           </button>
         </div>
       </motion.div>
