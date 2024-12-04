@@ -4,7 +4,7 @@ import { PrismaClient, Prisma } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hash the password for the admin user
+  // Contraseña inicial para el administrador
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) {
     throw new Error("ADMIN_PASSWORD is not set in the environment variables.");
@@ -12,7 +12,7 @@ async function main() {
 
   const hashedPassword = await hashPassword(adminPassword);
 
-  // Upsert the admin user
+  // Upsert del usuario administrador
   const admin = await prisma.user.upsert({
     where: { email: "admin@admin.com" },
     update: {},
@@ -20,13 +20,13 @@ async function main() {
       email: "admin@admin.com",
       name: "Admin",
       password: hashedPassword,
-      image: "https://api.dicebear.com/9.x/adventurer/svg?seed=Sara&flip=true", // Optional avatar image
+      image: "https://api.dicebear.com/9.x/adventurer/svg?seed=Sara&flip=true",
     },
   });
 
   console.log("Admin user created:", admin);
 
-  // Create quizzes and collect their IDs
+  // Datos de cuestionarios
   const quizzesData = [
     {
       title: "Generación X",
@@ -48,22 +48,18 @@ async function main() {
 
   const createdQuizzes = [];
   for (const quizData of quizzesData) {
-    let quiz = await prisma.quiz.findFirst({
+    const quiz = await prisma.quiz.upsert({
       where: { title: quizData.title },
+      update: {},
+      create: quizData,
     });
-
-    if (!quiz) {
-      quiz = await prisma.quiz.create({
-        data: quizData,
-      });
-    }
 
     createdQuizzes.push(quiz);
   }
 
   console.log("Quizzes created.");
 
-  // Create additional users and collect their IDs
+  // Datos de usuarios
   const usersData = [
     {
       email: "user1@example.com",
@@ -88,7 +84,6 @@ async function main() {
     },
   ];
 
-  // Include the admin in the users list
   usersData.push({
     email: admin.email,
     name: admin.name,
@@ -108,7 +103,7 @@ async function main() {
 
   console.log("Users created.");
 
-  // Assign all quizzes to all users
+  // Asignar cuestionarios a usuarios
   const userQuizzesData: Prisma.UserQuizCreateManyInput[] = [];
 
   for (const user of createdUsers) {
@@ -116,13 +111,12 @@ async function main() {
       userQuizzesData.push({
         userId: user.id,
         quizId: quiz.id,
-        score: Math.floor(Math.random() * 100), // Optional: generate random score
-        completed: Math.random() < 0.5, // Optional: random completion status
+        score: Math.floor(Math.random() * 100),
+        completed: Math.random() < 0.5,
       });
     }
   }
 
-  // Insert UserQuiz relationships
   await prisma.userQuiz.createMany({
     data: userQuizzesData,
     skipDuplicates: true,
@@ -130,13 +124,13 @@ async function main() {
 
   console.log("All quizzes assigned to all users.");
 
-  // Create global donation goal
+  // Crear objetivo global de donaciones
   const globalDonationGoal = await prisma.donationGoals.upsert({
     where: { id: "global-donation-goal" },
     update: {},
     create: {
       id: "global-donation-goal",
-      goal: 10000, // Set an initial donation goal
+      goal: 10000,
     },
   });
 

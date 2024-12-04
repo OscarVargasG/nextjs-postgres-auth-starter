@@ -1,6 +1,12 @@
-import { SHA256 as sha256 } from "crypto-js";
+import bcrypt from "bcrypt";
 
-// We hash the user entered password using crypto.js
-export const hashPassword = (pass: string) => {
-  return sha256(pass).toString();
+// Generar un hash con bcrypt
+export const hashPassword = async (pass: string) => {
+  const saltRounds = 10;
+  return await bcrypt.hash(pass, saltRounds);
+};
+
+// Comparar la contraseña ingresada con el hash almacenado
+export const comparePassword = async (pass: string, hash: string) => {
+  return await bcrypt.compare(pass, hash);
 };

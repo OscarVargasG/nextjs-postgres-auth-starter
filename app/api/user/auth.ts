@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/util";
+import { comparePassword, hashPassword } from "@/lib/util";
 import { NextApiRequest, NextApiResponse } from "next";
 
 // Manejo principal del endpoint
@@ -38,16 +38,14 @@ async function loginUserHandler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Resolve the hashed password
-    const hashedPassword = await hashPassword(password);
-
-    // Compare hashed password with stored password
-    if (user.password === hashedPassword) {
-      // Exclude the password before sending the response
-      return res.status(200).json(exclude(user, ["password"]));
-    } else {
+    // Comparar la contraseña ingresada con el hash almacenado
+    const isValidPassword = await comparePassword(password, user.password);
+    if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    // Excluir la contraseña antes de enviar la respuesta
+    return res.status(200).json(exclude(user, ["password"]));
   } catch (e) {
     console.error("Login Error:", e);
     return res.status(500).json({ message: "Internal server error" });

@@ -27,12 +27,12 @@ export default function DonationProgress({
           <div className="flex mb-2 items-center justify-between">
             <div>
               <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
-                Meta: ${goal.toLocaleString()}
+                Meta: ₡{goal.toLocaleString()}
               </span>
             </div>
             <div className="text-right">
               <span className="text-xs font-semibold inline-block text-indigo-600">
-                Actual: ${current.toLocaleString()} ({percentage.toFixed(1)}%)
+                Actual: ₡{current.toLocaleString()} ({percentage.toFixed(1)}%)
               </span>
             </div>
           </div>
